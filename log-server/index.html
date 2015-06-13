@@ -15,9 +15,6 @@
                 iosocket.on('disconnect', function() {
                     $('#incomingLog').append('<li>Disconnected</li>');
                 });
-                iosocket.on('reload', function (data) {
-                    location.reload();
-                });
             });
         });
     </script>

@@ -4,6 +4,7 @@ var fs = require('fs'),
 
 var port = process.argv[3];
 var file = process.argv[2];
+var oldLogs = fs.readFileSync(file, 'utf8');
 
 if (process.argv.length < 4) {
   console.log("Usage: node app.js [logFile] [port]");
@@ -19,26 +20,35 @@ var server = http.createServer(function(req, res) {
   console.log('Listening at: http://localhost:' + port);
 });
 
-socketio.listen(server).on('connection', function(socket) {
-  var oldLogs = fs.readFileSync(file, 'utf8');
-  emitIt(oldLogs, socket);
-  fs.watch(file, function(event, fname) {
-    if (event == 'change') {
-      newContents = fs.readFileSync(file, 'utf8');
-      if (newContents.length - oldLogs.length < 0) {
-        socket.emit('reload', "reload page");
-      }
-      if (newContents.length - oldLogs.length != 0) {
-        emitIt(newContents.substring(oldLogs.length + 1, newContents.length), socket);
-        oldLogs = newContents;
-      }
-    }
-  });
+var socket = socketio.listen(server);
+
+var oldLogs = fs.readFileSync(file).toString();
+
+fs.watch(file, function(event, fname) {
+  if (event == 'change') {
+    var readStream = fs.createReadStream(file, {
+      start: oldLogs.length
+    });
+    var text = '';
+    readStream.on('data', function(chunk) {
+      text += chunk.toString();
+    });
+    readStream.on('end', function() {
+      oldLogs += text;
+      emitIt(text, socket);
+    });
+  }
+});
+
+var text = "";
+socket.on('connection', function(socket) {
+  emitIt(oldLogs, socket)
 });
 
 var emitIt = function(logs, socket) {
   var logs = logs.split('\n');
   logs.forEach(function(log) {
-    socket.emit('message', log);
+    if (log.replace(/\s/, '').length)
+      socket.emit('message', log);
   });
 }
