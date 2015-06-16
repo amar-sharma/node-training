@@ -6,6 +6,8 @@
     "start": "node app.js log.txt 8000"
   },
   "dependencies": {
+    "byline": "^4.2.1",
     "socket.io": "^1.3.5"
   }
 }
+

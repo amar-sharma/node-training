@@ -1,25 +1,28 @@
 <html>
-<head>
+  <head>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        $(function(){
-            var iosocket = io.connect();
- 
-            iosocket.on('connect', function () {
-                $('#incomingLog').append($('<li>Connected to Log</li>'));
- 
-                iosocket.on('message', function(message) {
-                    $('#incomingLog').append($('<li></li>').text(message));
-                });
-                iosocket.on('disconnect', function() {
-                    $('#incomingLog').append('<li>Disconnected</li>');
-                });
-            });
+    $(function(){
+    var iosocket = io.connect();
+    iosocket.on('connect', function() {
+      var lastIndex;
+      $('#incomingLog').append($('<li>Connected to Log</li>'));
+      iosocket.on('message', function(logs) {
+        console.log(logs);
+        logs.forEach(function(log){
+          if(log.replace(/\s/, '').length)
+            $('#incomingLog').append($('<li></li>').text(log));
         });
+      });
+      iosocket.on('disconnect', function() {
+        $('#incomingLog').append('<li>Disconnected</li>');
+      });
+    });
+    });
     </script>
-</head>
-<body>
-<ul id="incomingLog"></ul>
+  </head>
+  <body>
+  <ul id="incomingLog"></ul>
 </body>
 </html>
